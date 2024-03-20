@@ -5,10 +5,35 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <strings.h>
+#include <string.h>
 #include <unistd.h>
+
+#define MAX_BUFFER_SIZE (128)
 
 static const char     SERVER_IP[] = "127.0.0.1";
 static const uint16_t SERVER_PORT = 8080;
+
+void echo_chat(int client_socket_fd)
+{
+    char buf[MAX_BUFFER_SIZE];
+    ssize_t n;
+
+    while (1) {
+        printf("Input message: ");
+        fgets(buf, MAX_BUFFER_SIZE, stdin);
+
+        buf[strlen(buf) - 1] = 0;
+
+        n = write(client_socket_fd, buf, strlen(buf));
+        n = read(client_socket_fd, buf, n);
+        if (n < 1) {
+            perror("Something goes wrong while read from peer socket");
+            return;
+        }
+
+        printf("Message from server: %s\n", buf);
+    }
+}
 
 int main()
 {
@@ -33,6 +58,9 @@ int main()
         perror("Error while connecting to server");
         return EXIT_FAILURE;
     }
+
+    printf("Start echo chat.\n");
+    echo_chat(client_socket);
 
     close(client_socket);
 
